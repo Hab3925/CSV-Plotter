@@ -56,7 +56,7 @@ class FileSelector(UI.GUI):
 
     def remove_file(self):
         # remove file from plotter
-        self.plotter.remove_file(self.file_path)
+        
         self.file_path = ""
 
         # remove from entry
@@ -108,6 +108,10 @@ class FileLoading(UI.GUI):
 
         self.headerPreview.grid(
             row=0, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
+
+        # find the header
+        startRow, header = self.find_header(filePath)
+        print(startRow, header)
         # load the preview
         self.load_preview(filePath)
 
@@ -169,6 +173,17 @@ class FileLoading(UI.GUI):
         self.headerPreview.delete("0.0", "end")
         self.headerPreview.insert("0.0", preview)
         self.headerPreview.configure(state="disabled")
+
+    def find_header(self, filePath):
+        # load the first 100 rows of the file and find the row with the header
+   
+        with open(filePath, "r") as file:
+            for i in range(100):
+                line = file.readline()
+                headerMatch = re.match(r"^([a-zA-Z\-_\(\)\{\}\[\]:\s(\d)?]+,)*[a-zA-z\-_\(\)\{\}\[\]:\s]+$", line)
+                if headerMatch:
+                    return i, headerMatch.match(0)
+        return None, None
 
     def grid(self, **gridoptions):
         self.widgetFrame.grid(**gridoptions)
