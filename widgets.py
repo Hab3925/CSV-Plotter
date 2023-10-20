@@ -16,9 +16,6 @@ class FileSelector(UI.GUI):
 
         self.widgetFrame = ctk.CTkFrame(self.frame)
 
-        self.filesLabel = ctk.CTkLabel(self.widgetFrame, text="Files to Plot:")
-        self.filesLabel.grid(row=0, column=0, sticky="w", padx=5, pady=5)
-
         self.fileLabel = ctk.CTkLabel(self.widgetFrame, text="File Path:")
         self.fileLabel.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
@@ -52,11 +49,7 @@ class FileSelector(UI.GUI):
         self.fileLoader.grid(row=1, column=0, columnspan=3,
                              sticky="nsew", padx=5, pady=5)
 
-        #
-
     def remove_file(self):
-        # remove file from plotter
-        
         self.file_path = ""
 
         # remove from entry
@@ -67,12 +60,16 @@ class FileSelector(UI.GUI):
 
         # replace remove button with select file button
         self.fileButton.destroy()
+        self.fileLoader.destroy()
         self.fileButton = ctk.CTkButton(
             self.widgetFrame, text="Select File", command=self.select_file)
         self.fileButton.grid(row=0, column=2, sticky="ew", padx=5, pady=5)
 
     def grid(self, **gridoptions):
         self.widgetFrame.grid(**gridoptions)
+
+    def destroy(self):
+        self.widgetFrame.destroy()
 
 
 class FileLoading(UI.GUI):
@@ -110,8 +107,8 @@ class FileLoading(UI.GUI):
             row=0, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
 
         # find the header
-        startRow, header = self.find_header(filePath)
-        print(startRow, header)
+        headers = self.find_header(filePath)
+        print(headers)
         # load the preview
         self.load_preview(filePath)
 
@@ -161,12 +158,7 @@ class FileLoading(UI.GUI):
     def load_preview(self, filePath):
         # load the first 50 rows of the file
 
-        preview = pd.read_csv(filePath, nrows=100)
-
-        # find the row with the header
-
-        # Add the row index as column in the dataframe
-        preview.insert(0, "Row", preview.index)
+        preview = pd.read_csv(filePath, nrows=50)
 
         # add it to the preview
         self.headerPreview.configure(state="normal")
@@ -175,15 +167,40 @@ class FileLoading(UI.GUI):
         self.headerPreview.configure(state="disabled")
 
     def find_header(self, filePath):
-        # load the first 100 rows of the file and find the row with the header
-   
+        # Regex black magic on first 100 lines to find the header
+
+        headers = []
+
+        df = pd.read_csv(filePath, nrows=100)
+
+    
         with open(filePath, "r") as file:
             for i in range(100):
                 line = file.readline()
-                headerMatch = re.match(r"^([a-zA-Z\-_\(\)\{\}\[\]:\s(\d)?]+,)*[a-zA-z\-_\(\)\{\}\[\]:\s]+$", line)
+                headerMatch = re.match(
+                    r"^([a-zA-Z\-_\(\)\{\}\[\]:\s(\d)?]+,)*[a-zA-z\-_\(\)\{\}\[\]:\s]+$", line)
+
+                print(line)
+                print(headerMatch.group(0) if headerMatch else None)
+                print("\n-------------------\n")
+
                 if headerMatch:
-                    return i, headerMatch.match(0)
-        return None, None
+                    # check if the next line contain the same number of columns with numbers
+
+                    line = file.readline(i + 1)
+                    print(line)
+
+                    match = re.match(r"^([0-9\.\-]+,)*[0-9\.\-]+$", line)
+
+                    if not match:
+                        break
+
+                    headers.append([i, headerMatch.group(0)])
+
+        return headers
 
     def grid(self, **gridoptions):
         self.widgetFrame.grid(**gridoptions)
+
+    def destroy(self):
+        self.widgetFrame.destroy()
