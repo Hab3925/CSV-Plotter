@@ -1,0 +1,5 @@
+Select what files to plot -> find the header -> load the file
+Downsampled data plotted in the preview -> Select slicing parameters to select what data is interesting
+Slice the data -> Update preview with less downsampled data -> Change the axis names, title, legend, colors, subplots, and saving options
+Actually plot the data in full resolution
+
